@@ -15,12 +15,15 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 
 CMD ["/sbin/my_init"]
 
+RUN apt-get install -y software-properties-common && \
+    add-apt-repository -y ppa:ondrej/php
+
 # nginx-php installation
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y upgrade
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update --fix-missing
-RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.0
-RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.0-fpm php7.0-common php7.0-cli php7.0-mysqlnd php7.0-mcrypt php7.0-curl php7.0-bcmath php7.0-mbstring php7.0-soap php7.0-xml php7.0-zip php7.0-json php7.0-imap php-xdebug php-pgsql
+RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.1
+RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.1-fpm php7.1-common php7.1-cli php7.1-mysqlnd php7.1-mcrypt php7.1-curl php7.1-bcmath php7.1-mbstring php7.1-soap php7.1-xml php7.1-zip php7.1-json php7.1-imap php-xdebug php-pgsql
 
 # install nginx (full)
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nginx-full
@@ -29,6 +32,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nginx-full
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nodejs
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y npm
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y git
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y vim
 
 # install yarn
 RUN DEBIAN_FRONTEND="noninteractive" curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
@@ -39,7 +43,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get install yarn
 RUN curl -sS https://getcomposer.org/installer | php
 RUN mv composer.phar /usr/local/bin/composer
 
-# add build script (also set timezone to Americas/Sao_Paulo)
+# add build script (also set timezone to Americas/Denver)
 RUN mkdir -p /root/setup
 ADD build/setup.sh /root/setup/setup.sh
 RUN chmod +x /root/setup/setup.sh
@@ -52,13 +56,13 @@ ADD build/.bashrc /root/.bashrc
 # disable services start
 RUN update-rc.d -f apache2 remove
 RUN update-rc.d -f nginx remove
-RUN update-rc.d -f php7.0-fpm remove
+RUN update-rc.d -f php7.1-fpm remove
 
 # add startup scripts for nginx
 ADD build/nginx.sh /etc/service/nginx/run
 RUN chmod +x /etc/service/nginx/run
 
-# add startup scripts for php7.0-fpm
+# add startup scripts for php7.1-fpm
 ADD build/phpfpm.sh /etc/service/phpfpm/run
 RUN chmod +x /etc/service/phpfpm/run
 
@@ -73,7 +77,7 @@ RUN chmod 755 /var/www
 ENV TERM=xterm
 
 # port and settings
-EXPOSE 80 9000
+EXPOSE 80 443 9000
 
 # cleanup apt and lists
 RUN apt-get clean
