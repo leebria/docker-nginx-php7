@@ -1,5 +1,4 @@
 FROM phusion/baseimage
-MAINTAINER Thiago Taranto <ttaranto@gmail.com>
 
 # ensure UTF-8
 RUN locale-gen en_US.UTF-8
@@ -33,6 +32,9 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nodejs
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y npm
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y git
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y vim
+
+# install php redis
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y php-redis
 
 # install yarn
 RUN DEBIAN_FRONTEND="noninteractive" curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
