@@ -25,10 +25,6 @@ echo 'xdebug.idekey=PHPSTORM' >> /etc/php/7.1/mods-available/xdebug.ini
 sed -i "s/;date.timezone =*/date.timezone = America\/Denver/" /etc/php/7.1/fpm/php.ini
 sed -i "s/;date.timezone =*/date.timezone = America\/Denver/" /etc/php/7.1/cli/php.ini
 
-# setup php7.1-fpm to not run as daemon (allow my_init to control)
-sed -i "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/7.1/fpm/php-fpm.conf
-sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/7.1/fpm/php.ini
-
 # create run directories
 mkdir -p /var/run/php
 chown -R www-data:www-data /var/run/php

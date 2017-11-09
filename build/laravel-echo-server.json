@@ -1,0 +1,24 @@
+{
+  "authHost": "https://localhost",
+  "authEndpoint": "/broadcasting/auth",
+  "clients": [
+    {
+      "appId": "",
+      "key": ""
+    }
+  ],
+  "database": "redis",
+  "databaseConfig": {
+    "redis": {
+      "port": "6379",
+      "host": "https://localhost"
+    }
+  },
+  "devMode": true,
+  "host": null,
+  "port": "6001",
+  "protocol": "https",
+  "socketio": {},
+  "sslCertPath": "",
+  "sslKeyPath": ""
+}
