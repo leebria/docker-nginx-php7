@@ -19,6 +19,6 @@
   "port": "6001",
   "protocol": "https",
   "socketio": {},
-  "sslCertPath": "",
-  "sslKeyPath": ""
+  "sslCertPath": "/etc/ssl/private/cert.pem",
+  "sslKeyPath": "/etc/ssl/private/key.pem"
 }

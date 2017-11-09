@@ -14,14 +14,21 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 
 CMD ["/sbin/my_init"]
 
+# install latest version of nodejs & npm
+RUN curl -sL https://deb.nodesource.com/setup_9.x | bash -
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y -f nodejs
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y git
+
 # install PHP repository
 RUN apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:ondrej/php
 
-# nginx-php installation
+# update sources
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y upgrade
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update --fix-missing
+
+# install php7.1
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.1
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.1-fpm \
                                                         php7.1-common \
@@ -51,11 +58,6 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install php7.1-fpm \
 # install nginx (full)
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nginx-full
 
-# install latest version of nodejs
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nodejs
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y npm
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y git
-
 # install vim
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y vim
 
@@ -72,6 +74,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get install yarn
 
 # install laravel echo server
 RUN cd ${HOME} && yarn add global laravel-echo-server
+RUN ln -s ${HOME}/node_modules/laravel-echo-server/bin/server.js /usr/bin/laravel-echo-server
 
 # remove apache2
 RUN apt-get purge -y apache2
@@ -80,32 +83,35 @@ RUN apt-get purge -y apache2
 RUN curl -sS https://getcomposer.org/installer | php
 RUN mv composer.phar /usr/local/bin/composer
 
-# copy files from repo
-ADD build/laravel-echo-server.conf /etc/supervisor/conf.d/laravel-echo-server.conf
-ADD build/php7.1-fpm.conf /etc/supervisor/conf.d/php7.1-fpm.conf
-ADD build/upstream.conf /etc/nginx/conf.d/upstream.conf
-ADD build/nginx.conf /etc/nginx/nginx.conf
-ADD build/default.conf /etc/nginx/sites-available/default
-ADD build/.bashrc /root/.bashrc
-
-# disable services start
-RUN update-rc.d -f apache2 remove
-RUN update-rc.d -f nginx remove
-RUN update-rc.d -f php7.1-fpm remove
-
-# add startup scripts for nginx
-ADD build/nginx.sh /etc/service/nginx/run
-RUN chmod +x /etc/service/nginx/run
-
-# add startup scripts for php7.1-fpm
-ADD build/phpfpm.sh /etc/service/phpfpm/run
-RUN chmod +x /etc/service/phpfpm/run
-
 # set WWW public folder
 RUN mkdir -p /var/www
 RUN chown -R www-data:www-data /var/www
 RUN chmod 755 /var/www
 RUN rm -r /var/www/html
+
+# copy files from repo
+ADD build/supervisor/laravel-echo-server.conf /etc/supervisor/conf.d/laravel-echo-server.conf
+ADD build/supervisor/php7.1-fpm.conf /etc/supervisor/conf.d/php7.1-fpm.conf
+ADD build/supervisor/nginx.conf /etc/supervisor/conf.d/nginx.conf
+
+ADD build/nginx/upstream.conf /etc/nginx/conf.d/upstream.conf
+ADD build/nginx/nginx.conf /etc/nginx/nginx.conf
+ADD build/nginx/default.conf /etc/nginx/sites-available/default
+
+ADD build/laravel-echo-server.json /var/www/laravel-echo-server.json
+
+ADD build/generate_certificate.sh /etc/ssl/private/generate_certificate.sh
+
+ADD build/.bashrc /root/.bashrc
+
+# generate an ssl certificate
+RUN chmod +x /etc/ssl/private/generate_certificate.sh
+RUN cd /etc/ssl/private && (/bin/bash generate_certificate.sh)
+
+# disable services start
+RUN update-rc.d -f apache2 remove
+RUN update-rc.d -f nginx remove
+RUN update-rc.d -f php7.1-fpm remove
 
 # set php-fpm configuration values
 RUN sed -i "s/;date.timezone =.*/date.timezone = UTC/" /etc/php/7.1/cli/php.ini
@@ -148,6 +154,8 @@ RUN chown -R www-data:www-data /var/run/php
 
 # create log directories
 RUN mkdir -p /var/log/php7.1-fpm
+RUN mkdir -p /var/log/nginx
+RUN mkdir -p /var/log/supervisor
 
 # set terminal environment
 ENV TERM=xterm
@@ -159,3 +167,5 @@ EXPOSE 80 443 3000 6001 6379 8080 9000
 RUN apt-get clean
 RUN apt-get autoclean
 RUN apt-get -y autoremove
+
+CMD ["service", "supervisor", "start"]
