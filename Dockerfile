@@ -1,5 +1,7 @@
 FROM ubuntu:17.10
 
+ARG USER=ubuntu
+
 # update and upgrade system dependencies
 RUN DEBIAN_FRONTEND="noninteractive" apt-get clean && apt-get update && apt-get -y upgrade
 
@@ -17,6 +19,9 @@ ENV TERM=xterm
 
 # set the env $HOME
 ENV HOME /root
+
+# create a non root user
+RUN useradd -mU -s /bin/bash ${USER}
 
 # install some PPAs
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y software-properties-common curl
@@ -109,6 +114,19 @@ COPY build/start.sh /tmp/start.sh
 
 # copy shell env
 COPY build/.bashrc /root/.bashrc
+
+# add ${USER} ro www-data
+RUN usermod -a -G www-data ${USER}
+RUN id ${USER}
+RUN groups ${USER}
+
+# Install oh-my-zsh
+RUN git clone git://github.com/robbyrussell/oh-my-zsh.git /home/${USER}/.oh-my-zsh
+RUN cp /home/${USER}/.oh-my-zsh/templates/zshrc.zsh-template /home/${USER}/.zshrc
+RUN chown -R ${USER}:${USER} /home/${USER}/.oh-my-zsh
+RUN chown ${USER}:${USER} /home/${USER}/.zshrc
+RUN chsh -s /usr/bin/zsh ${USER}
+
 
 # run the setup script
 RUN chmod +x /tmp/setup.sh
