@@ -1,6 +1,6 @@
 FROM ubuntu:17.10
 
-ARG USER=ubuntu
+ARG NON_ROOT_USER=ubuntu
 
 # update and upgrade system dependencies
 RUN DEBIAN_FRONTEND="noninteractive" apt-get clean && apt-get update && apt-get -y upgrade
@@ -21,7 +21,7 @@ ENV TERM=xterm
 ENV HOME /root
 
 # create a non root user
-RUN useradd -mU -s /bin/bash ${USER}
+RUN useradd -mU -s /bin/bash ${NON_ROOT_USER}
 
 # install some PPAs
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y software-properties-common curl
@@ -110,23 +110,25 @@ COPY build/laravel-echo-server.json /etc/laravel-echo-server.json
 # copy scripts
 COPY build/generate_certificate.sh /etc/ssl/private/generate_certificate.sh
 COPY build/setup.sh /tmp/setup.sh
-COPY build/start.sh /tmp/start.sh
+COPY build/start.sh /usr/local/bin/start
 
 # copy shell env
 COPY build/.bashrc /root/.bashrc
 
-# add ${USER} ro www-data
-RUN usermod -a -G www-data ${USER}
-RUN id ${USER}
-RUN groups ${USER}
+# make start script executable
+RUN chmod +x /usr/local/bin/start
+
+# add ${NON_ROOT_USER} to www-data
+RUN usermod -a -G www-data ${NON_ROOT_USER}
+RUN id ${NON_ROOT_USER}
+RUN groups ${NON_ROOT_USER}
 
 # Install oh-my-zsh
-RUN git clone git://github.com/robbyrussell/oh-my-zsh.git /home/${USER}/.oh-my-zsh
-RUN cp /home/${USER}/.oh-my-zsh/templates/zshrc.zsh-template /home/${USER}/.zshrc
-RUN chown -R ${USER}:${USER} /home/${USER}/.oh-my-zsh
-RUN chown ${USER}:${USER} /home/${USER}/.zshrc
-RUN chsh -s /usr/bin/zsh ${USER}
-
+RUN git clone git://github.com/robbyrussell/oh-my-zsh.git /home/${NON_ROOT_USER}/.oh-my-zsh
+RUN cp /home/${NON_ROOT_USER}/.oh-my-zsh/templates/zshrc.zsh-template /home/${NON_ROOT_USER}/.zshrc
+RUN chown -R ${NON_ROOT_USER}:${NON_ROOT_USER} /home/${NON_ROOT_USER}/.oh-my-zsh
+RUN chown ${NON_ROOT_USER}:${NON_ROOT_USER} /home/${NON_ROOT_USER}/.zshrc
+RUN chsh -s /usr/bin/zsh ${NON_ROOT_USER}
 
 # run the setup script
 RUN chmod +x /tmp/setup.sh
@@ -138,4 +140,4 @@ RUN apt-get autoclean
 RUN apt-get -y autoremove
 
 # ports
-EXPOSE 80 443 3000 6001 6379 8080 9000
+EXPOSE 80 443 9000
