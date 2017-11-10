@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-# remove default configs
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
+# remove html directory
+rm -r /var/www/html
 
 # set WWW public folder
 mkdir -p /var/www

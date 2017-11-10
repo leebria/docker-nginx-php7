@@ -124,11 +124,12 @@ RUN id ${NON_ROOT_USER}
 RUN groups ${NON_ROOT_USER}
 
 # Install oh-my-zsh
+RUN apt-get install -y zsh
 RUN git clone git://github.com/robbyrussell/oh-my-zsh.git /home/${NON_ROOT_USER}/.oh-my-zsh
 RUN cp /home/${NON_ROOT_USER}/.oh-my-zsh/templates/zshrc.zsh-template /home/${NON_ROOT_USER}/.zshrc
 RUN chown -R ${NON_ROOT_USER}:${NON_ROOT_USER} /home/${NON_ROOT_USER}/.oh-my-zsh
 RUN chown ${NON_ROOT_USER}:${NON_ROOT_USER} /home/${NON_ROOT_USER}/.zshrc
-RUN chsh -s /usr/bin/zsh ${NON_ROOT_USER}
+RUN chsh -s /bin/zsh ${NON_ROOT_USER}
 
 # run the setup script
 RUN chmod +x /tmp/setup.sh
